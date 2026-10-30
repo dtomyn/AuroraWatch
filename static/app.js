@@ -94,7 +94,7 @@ function attachChartHover(card) {
     const t0 = (bands.pre || bands.regular)[0], t1 = (bands.post || bands.regular)[1];
     const t = t0 + ((e.clientX - r.left) / r.width) * (t1 - t0);
     const p = pts.reduce((a, b) => (Math.abs(b[0] - t) < Math.abs(a[0] - t) ? b : a));
-    const px = ((p[0] - t0) / (t1 - t0)) * r.width;
+    const px = ((p[0] - t0) / (t1 - t0)) * box.clientWidth;
     if (!cross) {
       cross = document.createElement("div"); cross.className = "cross";
       tip = document.createElement("div"); tip.className = "tip";
@@ -102,7 +102,7 @@ function attachChartHover(card) {
     }
     cross.style.left = px + "px";
     tip.textContent = `${money(p[1], q.currency)} · ${timeIn(p[0], q.timezone)}`;
-    tip.style.left = Math.max(0, Math.min(px - tip.offsetWidth / 2, r.width - tip.offsetWidth)) + "px";
+    tip.style.left = Math.max(0, Math.min(px - tip.offsetWidth / 2, box.clientWidth - tip.offsetWidth)) + "px";
   });
 }
 

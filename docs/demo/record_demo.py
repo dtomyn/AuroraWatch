@@ -25,6 +25,9 @@ addEventListener('DOMContentLoaded', () => {
   const css = document.createElement('style');
   css.textContent = `
     html { overflow: hidden !important; height: 100%; }
+    /* Live blur is too slow to capture smoothly, so hold the aurora still and use solid panels. */
+    .aurora i { animation: none !important; }
+    .clock, .pulse, .card, .empty, .adder, .tape { backdrop-filter: none !important; background: rgba(16,21,38,.9) !important; }
     body { background: transparent !important; transform-origin: 0 0; transition: transform 1.25s cubic-bezier(.65,0,.2,1); overflow: visible !important; }
     #demo { position: fixed; inset: 0; z-index: 9999; pointer-events: none; font-family: "Space Grotesk", sans-serif; color: #eef1fb; }
     #cursor { position: absolute; left: 0; top: 0; width: 26px; height: 26px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.6)); }
@@ -60,8 +63,10 @@ addEventListener('DOMContentLoaded', () => {
     const body = document.body;
     if (!sel) { body.style.transform = 'none'; return; }
     const m = new DOMMatrix(getComputedStyle(body).transform);
-    const r = document.querySelector(sel).getBoundingClientRect();
-    const x0 = (r.left - m.e) / m.a, y0 = (r.top - m.f) / m.a, w = r.width / m.a, h = r.height / m.a;
+    const rs = [...document.querySelectorAll(sel)].map(e => e.getBoundingClientRect());
+    const left = Math.min(...rs.map(r => r.left)), top = Math.min(...rs.map(r => r.top));
+    const x0 = (left - m.e) / m.a, y0 = (top - m.f) / m.a;
+    const w = (Math.max(...rs.map(r => r.right)) - left) / m.a, h = (Math.max(...rs.map(r => r.bottom)) - top) / m.a;
     const s = Math.min(innerWidth / (w + 2 * pad), (innerHeight - 110) / (h + 2 * pad), maxS);
     const docH = body.scrollHeight;
     let x = x0 + w / 2 - innerWidth / s / 2, y = y0 + h / 2 - (innerHeight - 80) / s / 2;
@@ -115,12 +120,14 @@ try:
             page.evaluate("([s,p,m]) => demoCam(s,p,m)", [sel, pad, maxS])
             wait(settle)
         def glide(x, y, ms=650):
-            n = max(8, ms // 22)
             sx, sy = mouse
-            for i in range(1, n + 1):
-                t = i / n; e = t * t * (3 - 2 * t)
+            start = time.monotonic()
+            while True:  # paced by the clock so a slow browser can't stretch the move
+                t = min(1, (time.monotonic() - start) * 1000 / ms); e = t * t * (3 - 2 * t)
                 page.mouse.move(sx + (x - sx) * e, sy + (y - sy) * e)
-                wait(16)
+                if t >= 1:
+                    break
+                wait(10)
             mouse[:] = [x, y]
         def to(sel):
             b = page.locator(sel).first.bounding_box()
@@ -161,7 +168,7 @@ try:
 
         # Clock
         cap("The market clock shows the session and the next bell")
-        cam(".clock", pad=16, maxS=1.6); wait(3400)
+        cam(".clock-head > div:first-child, #nowMarker", pad=30, maxS=2.1); wait(3400)
 
         # Sessions
         cap("Pre-market, regular and after-hours, side by side")
@@ -179,9 +186,9 @@ try:
         # Pulse and sort
         glide(W * .95, H * .1, 300)
         cap("See every mover at a glance")
-        cam(".pulse", pad=18, maxS=1.9); wait(2800)
+        cam(".breadth, .tile", pad=30, maxS=2.2); wait(2800)
         cap("Sort by top movers, or drag cards into your own order")
-        cam(".toolbar", pad=280, maxS=1.3, settle=1300)
+        cam(".seg-control", pad=60, maxS=1.8, settle=1300)
         click('[data-sort="movers"]'); wait(2300)
         click('[data-sort="mine"]'); wait(900)
 
