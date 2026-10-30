@@ -14,3 +14,30 @@ Open http://127.0.0.1:5000. Add and remove tickers in the app; they are saved to
 Set `WATCHLIST_FILE` or `PORT` to change the config path or port.
 
 Quotes come from Yahoo Finance's public chart endpoint, which is unofficial and may be delayed.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph machine["Your computer"]
+        subgraph browser["Browser"]
+            ui["Web UI<br/>index.html, app.js, style.css"]
+        end
+        subgraph server["Flask server, 127.0.0.1:5000 (app.py)"]
+            api["REST API<br/>/api/quotes, /api/watchlist, /api/search"]
+            quotes["Quote builder<br/>pre, regular and post moves"]
+            cache[("In-memory cache<br/>10 s per ticker")]
+        end
+        config[("watchlist.json<br/>saved tickers")]
+    end
+    yahoo["Yahoo Finance<br/>chart and search endpoints"]
+
+    ui -- "polls every 15 s,<br/>add, remove, reorder, search" --> api
+    api -- "read and atomic write" --> config
+    api --> quotes
+    quotes <--> cache
+    quotes -- "HTTPS, on cache miss" --> yahoo
+    api -- "ticker search" --> yahoo
+```
+
+See the [product requirements](docs/PRD.md) and [technical specification](docs/SPECIFICATION.md) for details.

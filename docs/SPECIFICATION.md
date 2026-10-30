@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Retroactive: describes the implementation as built |
+| **Status** | Current: describes the implementation as built |
 | **Date** | 2026-10-30 |
 | **Companion** | [Product requirements](PRD.md) |
 

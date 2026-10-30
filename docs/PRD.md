@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Retroactive: describes the product as built |
+| **Status** | Current: describes the product as built |
 | **Date** | 2026-10-30 |
 | **Companion** | [Technical specification](SPECIFICATION.md) |
 
