@@ -2,6 +2,8 @@
 
 A local stock watchlist that shows pre-market, regular and after-hours quotes.
 
+https://github.com/user-attachments/assets/fc4f0571-cc68-4cb2-9a3d-755d3ec829fb
+
 ```bash
 python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements.txt
