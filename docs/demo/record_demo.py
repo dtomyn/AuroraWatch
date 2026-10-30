@@ -4,7 +4,7 @@ Uses a temporary watchlist, so your own watchlist.json is not touched.
 Setup: pip install -r docs/demo/requirements.txt && playwright install chromium
 Run:   python docs/demo/record_demo.py
 """
-import base64, json, os, shutil, subprocess, tempfile, time, urllib.request
+import base64, json, os, shutil, subprocess, sys, tempfile, time, urllib.request
 from pathlib import Path
 import imageio_ffmpeg
 from playwright.sync_api import sync_playwright
@@ -13,6 +13,7 @@ SCRATCH = Path(tempfile.gettempdir()) / "aurora_demo_build"
 SCRATCH.mkdir(exist_ok=True)
 PROJECT = Path(__file__).resolve().parents[2]
 OUTPUT = Path(__file__).resolve().parent / "aurora-watch-demo.mp4"
+WINDOWS_VENV = PROJECT / ".venv/Scripts/python.exe"
 MAX_MB = 10  # GitHub limit for videos in READMEs and issues on free accounts
 FRAMES = SCRATCH / "frames"
 CFG = SCRATCH / "demo_watchlist.json"
@@ -82,7 +83,7 @@ if FRAMES.exists():
     shutil.rmtree(FRAMES)
 FRAMES.mkdir()
 server = subprocess.Popen(
-    [str(PROJECT / ".venv/Scripts/python.exe"), str(PROJECT / "app.py")],
+    [str(WINDOWS_VENV if WINDOWS_VENV.exists() and os.name == "nt" else sys.executable), str(PROJECT / "app.py")],
     env={**os.environ, "WATCHLIST_FILE": str(CFG), "PORT": str(PORT)},
     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
 )

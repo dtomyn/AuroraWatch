@@ -1,0 +1,24 @@
+{
+  "name": "Aurora Watch",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  // Packages go in the container's own Python: a .venv made on Windows can't run on Linux.
+  // A new Docker volume is owned by root, so hand it to the container's user first.
+  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && pip install -r requirements.txt -r docs/demo/requirements.txt && python -m playwright install --with-deps chromium",
+  // Keeps the Claude Code sign-in, settings and history across rebuilds.
+  "mounts": ["source=aurora-watch-claude,target=/home/vscode/.claude,type=volume"],
+  "containerEnv": { "CLAUDE_CONFIG_DIR": "/home/vscode/.claude" },
+  // VS Code tunnels this to the host, so app.py can stay bound to 127.0.0.1.
+  "forwardPorts": [5000],
+  "portsAttributes": {
+    "5000": { "label": "Aurora Watch", "onAutoForward": "openBrowser" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "anthropic.claude-code"],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.terminal.activateEnvironment": false
+      }
+    }
+  }
+}

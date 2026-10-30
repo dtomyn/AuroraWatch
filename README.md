@@ -15,6 +15,16 @@ Set `WATCHLIST_FILE` or `PORT` to change the config path or port.
 
 Quotes come from Yahoo Finance's public chart endpoint, which is unofficial and may be delayed.
 
+## Dev container
+
+With Docker and the VS Code Dev Containers extension installed, run **Dev Containers: Reopen in Container**, then:
+
+```bash
+python app.py
+```
+
+VS Code forwards port 5000 to http://localhost:5000. To re-record the demo video in the container, run `python docs/demo/record_demo.py`.
+
 ## Architecture
 
 ```mermaid
