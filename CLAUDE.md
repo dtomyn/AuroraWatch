@@ -18,7 +18,7 @@ App runs at http://127.0.0.1:5000. No build step — Flask serves static files d
 
 ## Architecture
 
-This is a single-file Flask app (`app.py`) with a vanilla JS frontend. There is no framework, bundler, or test suite.
+This is a single-file Flask app (`app.py`) with a vanilla JS frontend. There is no framework or bundler. An offline stdlib `unittest` suite lives in `tests/`; run it from the repo root with `python -m unittest discover -s tests -t . -v`.
 
 **Data flow:**
 1. The browser polls `/api/quotes` every 15 seconds
@@ -29,6 +29,7 @@ This is a single-file Flask app (`app.py`) with a vanilla JS frontend. There is 
 **Key backend functions (`app.py`):**
 - `build_quote(symbol, raw)` — converts raw Yahoo chart JSON into the structured quote dict returned by the API; the most complex function, handling multi-day trading period windows
 - `trading_days(meta)` — parses Yahoo's `tradingPeriods` structure (which differs between regular equities and 24h instruments like crypto) into a list of `{pre, regular, post}` dicts
+- `headline_price(session, pre, regular, post)` — server mirror of the client's `activeMove`; must stay in sync with it. `range_pct(price, low, high)` uses it to fill `day_range_pct` / `year_range_pct`
 - `get_quote(symbol)` — cache layer; serves stale data on upstream errors rather than blanking cards
 - Watchlist is persisted as `{"tickers": [...]}` in `watchlist.json`; writes are atomic via a `.tmp` file + `os.replace()`
 

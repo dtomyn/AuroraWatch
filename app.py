@@ -128,6 +128,31 @@ def move(price, base, when=None):
     }
 
 
+def range_pct(price, low, high):
+    """Position of price between low and high as 0-100, clamped and rounded to 1 decimal.
+
+    None when an input is missing or the range has no width (or is inverted).
+    """
+    if price is None or low is None or high is None or high <= low:
+        return None
+    return round(min(max((price - low) / (high - low) * 100, 0.0), 100.0), 1)
+
+
+def headline_price(session, pre, regular, post):
+    """The price the card shows in large type.
+
+    Must stay in sync with activeMove(q) in static/app.js.
+    """
+    if session == "pre" and pre:
+        return pre["price"]
+    if session == "post" and post:
+        return post["price"]
+    regular_time = (regular or {}).get("time") or 0
+    if session == "closed" and post and post.get("time") is not None and post["time"] > regular_time:
+        return post["price"]
+    return regular["price"] if regular else None
+
+
 def build_quote(symbol, raw):
     meta = raw["meta"]
     quote = (raw.get("indicators", {}).get("quote") or [{}])[0]
@@ -188,6 +213,7 @@ def build_quote(symbol, raw):
         window = trading_period.get(name) or {}
         if window.get("start", 0) <= now < window.get("end", 0):
             market_session = name
+    shown_price = headline_price(market_session, pre, regular, post)
 
     chart_day = days[current] if current is not None else None
     chart = {"points": [], "bands": {}}
@@ -226,6 +252,12 @@ def build_quote(symbol, raw):
         "day_low": meta.get("regularMarketDayLow"),
         "year_high": meta.get("fiftyTwoWeekHigh"),
         "year_low": meta.get("fiftyTwoWeekLow"),
+        "day_range_pct": range_pct(
+            shown_price, meta.get("regularMarketDayLow"), meta.get("regularMarketDayHigh")
+        ),
+        "year_range_pct": range_pct(
+            shown_price, meta.get("fiftyTwoWeekLow"), meta.get("fiftyTwoWeekHigh")
+        ),
         "volume": meta.get("regularMarketVolume"),
         "periods": trading_period,
         "chart": chart,

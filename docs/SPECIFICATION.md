@@ -82,6 +82,8 @@ All responses are JSON except `/`. Errors use the form `{"error": "message"}`.
 | `pre`, `regular`, `post` | `{price, change, pct, base, time}` or `null` |
 | `previous_close` | Base used for the regular session |
 | `day_high`, `day_low`, `year_high`, `year_low`, `volume` | Reference stats |
+| `day_range_pct` | Headline price's position between `day_low` and `day_high`, 0–100 to 1 decimal, or `null` (see Range position in section 5) |
+| `year_range_pct` | Headline price's position between `year_low` and `year_high`, 0–100 to 1 decimal, or `null` |
 | `periods` | Yahoo's current trading periods, used by the market clock |
 | `chart` | `{points: [[epoch, price], ...], bands: {pre, regular, post}}`, each band `[start, end]` |
 | `stale` | True when serving the last good quote after a failure |
@@ -115,7 +117,9 @@ Official closes are preferred because the last one-minute candle can differ from
 
 Pre and post are `null` unless `hasPrePostMarketData` is true and the type isn't crypto.
 
-**Headline figure (`activeMove`, client side):** live pre or post when it has a price. When closed, post if its last trade is newer than the regular price. Otherwise regular.
+**Headline figure (`activeMove`, client side):** live pre or post when it has a price. When closed, post if its last trade is newer than the regular price. Otherwise regular. The server mirrors this rule in `headline_price()`, using the same `session` value it sends to the client; the two must stay in sync.
+
+**Range position (`range_pct()`):** `day_range_pct` and `year_range_pct` place the headline price between `regularMarketDayLow`/`regularMarketDayHigh` and `fiftyTwoWeekLow`/`fiftyTwoWeekHigh` respectively, the same sources as the `day_*` and `year_*` stats. The value is `(price - low) / (high - low) * 100`, clamped to 0–100 and then rounded to 1 decimal. It is `null` when the price, low or high is missing, or when high is not greater than low. A stale cached quote keeps the values it was built with.
 
 **Session state:** compared on the server against `currentTradingPeriod`. The clock recalculates each second from SPY's periods, corrected for the server-client time difference.
 
@@ -176,7 +180,13 @@ Open http://127.0.0.1:5000. Paths shown are for Windows.
 
 ## 10. Verification
 
-Checks were manual, on 2026-10-30, during regular market hours. There is no automated suite.
+An offline automated suite lives in `tests/` and uses only the standard library's `unittest` and `unittest.mock`. It covers `range_pct()`, `headline_price()` and the `GET /api/quotes` contract for the range fields, with `fetch_chart` stubbed, `CONFIG_PATH` pointed at a temporary file and the quote cache cleared, so no request reaches Yahoo. Run it from the repository root:
+
+```bash
+python -m unittest discover -s tests -t . -v
+```
+
+The checks below were manual, on 2026-10-30, during regular market hours.
 
 | Area | Method | Result |
 |---|---|---|
