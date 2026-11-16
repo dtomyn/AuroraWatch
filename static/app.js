@@ -21,7 +21,10 @@ const dateIn = (t, tz) => new Date(t * 1000).toLocaleDateString("en-US", { month
 const sameDay = (a, b, tz) => dateIn(a, tz) === dateIn(b, tz);
 const now = () => Date.now() / 1000 + state.offset;
 
-/** The figure that best describes a stock right now: the live session, else the latest print. */
+/**
+ * The figure that best describes a stock right now: the live session, else the latest print.
+ * Mirrored on the server by headline_price() in app.py; keep the two in sync.
+ */
 function activeMove(q) {
   if (q.session === "pre" && q.pre) return { ...q.pre, key: "pre" };
   if (q.session === "post" && q.post) return { ...q.post, key: "post" };
@@ -138,6 +141,13 @@ function cardInner(q) {
     <div class="stats" data-stats></div>`;
 }
 
+/** A thin low–high track with a marker at `value` (0–100, from the server); no marker when null. */
+function rangeBar(label, value) {
+  const known = typeof value === "number" && Number.isFinite(value);
+  const text = known ? `${label}: ${value}% of the way from low to high` : `${label}: position unavailable`;
+  return `<span class="range-track" role="img" aria-label="${esc(text)}">${known ? `<i class="range-marker" style="left:${value}%"></i>` : ""}</span>`;
+}
+
 function updateCard(card, q, isNew) {
   if (q.error) {
     if (!card.classList.contains("error")) { card.className = "card error"; card.innerHTML = cardInner(q); }
@@ -173,8 +183,8 @@ function updateCard(card, q, isNew) {
     chart.dataset.sig = sig;
   }
   card.querySelector("[data-stats]").innerHTML =
-    `<span>Day <b>${num(q.day_low)} – ${num(q.day_high)}</b></span>
-     <span>52W <b>${num(q.year_low)} – ${num(q.year_high)}</b></span>
+    `<span class="range"><span>Day <b>${num(q.day_low)} – ${num(q.day_high)}</b></span>${rangeBar("Day range", q.day_range_pct)}</span>
+     <span class="range"><span>52W <b>${num(q.year_low)} – ${num(q.year_high)}</b></span>${rangeBar("52-week range", q.year_range_pct)}</span>
      <span>Vol <b>${compact(q.volume)}</b></span>${q.stale ? `<span class="stale">Delayed: showing last good quote</span>` : ""}`;
 }
 
