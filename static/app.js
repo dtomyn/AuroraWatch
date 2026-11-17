@@ -1,6 +1,7 @@
 "use strict";
 
 const POLL_MS = 15000;
+const SWING_HIGHLIGHT = 3; // day_swing_pct at or above this is highlighted on the card
 const STARTERS = ["AAPL", "NVDA", "TSLA", "MSFT", "AMZN", "META", "GOOGL", "AMD"];
 const SESSION_LABEL = { pre: "Pre-market", regular: "Regular", post: "After hours" };
 const $ = (id) => document.getElementById(id);
@@ -184,6 +185,7 @@ function updateCard(card, q, isNew) {
   }
   card.querySelector("[data-stats]").innerHTML =
     `<span class="range"><span>Day <b>${num(q.day_low)} – ${num(q.day_high)}</b></span>${rangeBar("Day range", q.day_range_pct)}</span>
+     ${q.day_swing_pct != null ? `<span class="swing${q.day_swing_pct >= SWING_HIGHLIGHT ? " wide" : ""}">Swing <b>${q.day_swing_pct.toFixed(1)}%</b></span>` : ""}
      <span class="range"><span>52W <b>${num(q.year_low)} – ${num(q.year_high)}</b></span>${rangeBar("52-week range", q.year_range_pct)}</span>
      <span>Open <b>${num(q.open)}</b>${q.gap ? ` <span class="gap ${dir(q.gap.change)}">(${pct(q.gap.pct)})</span>` : ""}</span>
      <span>Vol <b>${compact(q.volume)}</b></span>${q.stale ? `<span class="stale">Delayed: showing last good quote</span>` : ""}`;

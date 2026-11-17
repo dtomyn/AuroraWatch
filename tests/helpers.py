@@ -12,12 +12,15 @@ def chart_payload(
     price=None,
     has_ext=False,
     windows=((PRE, REGULAR, POST),),
+    day_high=None,
+    day_low=None,
 ):
     """Return a raw chart result dict.
 
     candles: list of (epoch, close) pairs.
     previous_close: meta.previousClose, or None to omit it (and chartPreviousClose).
     windows: one (pre, regular, post) tuple of (start, end) per trading day.
+    day_high / day_low: meta.regularMarketDayHigh / regularMarketDayLow, omitted when None.
     """
     def periods(index):
         return [[{"start": w[index][0], "end": w[index][1]}] for w in windows]
@@ -33,6 +36,10 @@ def chart_payload(
     }
     if previous_close is not None:
         meta["previousClose"] = previous_close
+    if day_high is not None:
+        meta["regularMarketDayHigh"] = day_high
+    if day_low is not None:
+        meta["regularMarketDayLow"] = day_low
     return {
         "meta": meta,
         "timestamp": [t for t, _ in candles],

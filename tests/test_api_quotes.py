@@ -40,6 +40,20 @@ class ApiQuotesTest(unittest.TestCase):
         called = sorted(c.args[0] for c in self.fetch.call_args_list)
         self.assertEqual(called, sorted(["AAPL"] + app.INDEXES))
 
+    def test_quotes_include_day_swing(self):
+        self.payload = chart_payload(
+            regular_candles(99.0, 101.0), previous_close=100.0, day_low=98.0, day_high=102.2
+        )
+        resp = app.app.test_client().get("/api/quotes")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.get_json()
+        [quote] = data["quotes"]
+        self.assertEqual(quote["symbol"], "AAPL")
+        self.assertEqual(quote["day_swing_pct"], 4.2)
+        self.assertEqual(len(data["indexes"]), len(app.INDEXES))
+        for index in data["indexes"]:
+            self.assertEqual(index["day_swing_pct"], 4.2)
+
 
 if __name__ == "__main__":
     unittest.main()
