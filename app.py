@@ -220,6 +220,22 @@ def build_quote(symbol, raw):
     # The open is the first one-minute candle of the last regular session.
     open_rows = candles_in(candles, days[last_regular]["regular"]) if last_regular is not None else []
     open_price = open_rows[0][1] if open_rows else None
+    # Relative volume: the last regular day's regular-session volume against the mean of
+    # the earlier days that traded a regular session. Extended hours are never counted.
+    vol_candles = [(t, v or 0) for t, v in zip(raw.get("timestamp") or [], quote.get("volume") or [])]
+
+    def regular_volume(i):
+        return sum(v for _, v in candles_in(vol_candles, days[i]["regular"]))
+
+    avg_volume = rel_volume = None
+    if last_regular is not None:
+        earlier = [regular_volume(i) for i in range(last_regular) if candles_in(candles, days[i]["regular"])]
+        if earlier:
+            mean = sum(earlier) / len(earlier)
+            avg_volume = round(mean)
+            if mean:
+                rel_volume = round(regular_volume(last_regular) / mean, 2)
+
     gap = None
     if open_price is not None and regular_base:
         gap = {
@@ -284,6 +300,8 @@ def build_quote(symbol, raw):
             shown_price, meta.get("fiftyTwoWeekLow"), meta.get("fiftyTwoWeekHigh")
         ),
         "volume": meta.get("regularMarketVolume"),
+        "avg_volume": avg_volume,
+        "rel_volume": rel_volume,
         "periods": trading_period,
         "chart": chart,
         "stale": False,

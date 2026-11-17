@@ -84,6 +84,8 @@ All responses are JSON except `/`. Errors use the form `{"error": "message"}`.
 | `open` | Close of the first regular-session candle of the last regular day, rounded to 4 decimals, or `null` |
 | `gap` | `{change, pct}` of `open` against `previous_close` (4 and 2 decimals), or `null` |
 | `day_high`, `day_low`, `year_high`, `year_low`, `volume` | Reference stats |
+| `avg_volume` | Whole-number mean regular-session volume of the chart days before the last regular day, or `null` (see Relative volume in section 5) |
+| `rel_volume` | Last regular day's regular-session volume divided by the unrounded average, to 2 decimals, or `null` |
 | `day_range_pct` | Headline price's position between `day_low` and `day_high`, 0–100 to 1 decimal, or `null` (see Range position in section 5) |
 | `year_range_pct` | Headline price's position between `year_low` and `year_high`, 0–100 to 1 decimal, or `null` |
 | `day_swing_pct` | `(day_high - day_low) / previous_close * 100` to 2 decimals, or `null` (see Day swing in section 5) |
@@ -121,6 +123,8 @@ Official closes are preferred because the last one-minute candle can differ from
 Pre and post are `null` unless `hasPrePostMarketData` is true and the type isn't crypto.
 
 **Open and gap:** `open` is the close of the first one-minute candle inside the regular window of the last regular day. Pre-market and after-hours candles are never used. It is `null` when no day has regular-session candles. `gap` is `{change, pct}` measured from the regular-session base (the value returned as `previous_close`) to the unrounded open, with `change` rounded to 4 decimals and `pct` to 2. It is `null` when `open` is `null` or the base is missing or zero.
+
+**Relative volume:** per-candle volumes come from `indicators.quote[0].volume`, aligned with `timestamp`; a null volume (or a missing volume list) counts as 0. A day's volume is the sum over candles inside its regular window only, so pre-market and after-hours volume is never counted. `avg_volume` is the mean volume of the days before the last regular day that have regular-session candles (the same test that picks the last regular day), rounded to a whole number; earlier days without regular candles are left out. It is `null` when there is no last regular day or no earlier day qualifies, for example on a single-day chart. `rel_volume` is the last regular day's volume so far divided by the unrounded mean, rounded to 2 decimals. It is `null` when `avg_volume` is `null` or the mean is 0. The `volume` field is unchanged (`regularMarketVolume`) and is not used in the ratio. The card shows `Vol <volume> (N.N× avg)` and highlights the suffix when `rel_volume` is 1.5 or more; with a `null` ratio only the volume is shown.
 
 **Headline figure (`activeMove`, client side):** live pre or post when it has a price. When closed, post if its last trade is newer than the regular price. Otherwise regular. The server mirrors this rule in `headline_price()`, using the same `session` value it sends to the client; the two must stay in sync.
 
@@ -187,7 +191,7 @@ Open http://127.0.0.1:5000. Paths shown are for Windows.
 
 ## 10. Verification
 
-An offline automated suite lives in `tests/` and uses only the standard library's `unittest` and `unittest.mock`. It covers `build_quote` open and gap figures, `range_pct()`, `swing_pct()` and the `day_swing_pct` field, `headline_price()` and the `GET /api/quotes` contract, with `fetch_chart` stubbed, `CONFIG_PATH` pointed at a temporary file and the quote cache cleared, so no request reaches Yahoo. Run it from the repository root:
+An offline automated suite lives in `tests/` and uses only the standard library's `unittest` and `unittest.mock`. It covers `build_quote` open and gap figures, relative volume (`avg_volume`, `rel_volume`), `range_pct()`, `swing_pct()` and the `day_swing_pct` field, `headline_price()` and the `GET /api/quotes` contract, with `fetch_chart` stubbed, `CONFIG_PATH` pointed at a temporary file and the quote cache cleared, so no request reaches Yahoo. Run it from the repository root:
 
 ```bash
 python -m unittest discover -s tests -t . -v
