@@ -18,7 +18,7 @@ App runs at http://127.0.0.1:5000. No build step — Flask serves static files d
 
 ## Architecture
 
-This is a single-file Flask app (`app.py`) with a vanilla JS frontend. There is no framework or bundler. An offline stdlib `unittest` suite lives in `tests/`; run it from the repo root with `python -m unittest discover -s tests -t . -v`.
+This is a single-file Flask app (`app.py`) with a vanilla JS frontend. There is no framework or bundler. An offline `unittest` suite lives in `tests/`; run it with `python -m unittest discover -s tests -t . -v` (`.venv/Scripts/python` on Windows).
 
 **Data flow:**
 1. The browser polls `/api/quotes` every 15 seconds

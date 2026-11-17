@@ -207,6 +207,16 @@ def build_quote(symbol, raw):
     regular_base = official_close(last_regular - 1) if last_regular else previous_close
     regular = move(price, regular_base, market_time)
 
+    # The open is the first one-minute candle of the last regular session.
+    open_rows = candles_in(candles, days[last_regular]["regular"]) if last_regular is not None else []
+    open_price = open_rows[0][1] if open_rows else None
+    gap = None
+    if open_price is not None and regular_base:
+        gap = {
+            "change": round(open_price - regular_base, 4),
+            "pct": round((open_price - regular_base) / regular_base * 100, 2),
+        }
+
     trading_period = meta.get("currentTradingPeriod") or {}
     market_session = "closed"
     for name in ("pre", "regular", "post"):
@@ -248,6 +258,8 @@ def build_quote(symbol, raw):
         "pre": pre,
         "post": post,
         "previous_close": regular_base,
+        "open": round(open_price, 4) if open_price is not None else None,
+        "gap": gap,
         "day_high": meta.get("regularMarketDayHigh"),
         "day_low": meta.get("regularMarketDayLow"),
         "year_high": meta.get("fiftyTwoWeekHigh"),
