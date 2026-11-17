@@ -12,12 +12,14 @@ def chart_payload(
     price=None,
     has_ext=False,
     windows=((PRE, REGULAR, POST),),
+    volumes=None,
 ):
     """Return a raw chart result dict.
 
     candles: list of (epoch, close) pairs.
     previous_close: meta.previousClose, or None to omit it (and chartPreviousClose).
     windows: one (pre, regular, post) tuple of (start, end) per trading day.
+    volumes: optional list aligned with candles, emitted as indicators.quote[0].volume.
     """
     def periods(index):
         return [[{"start": w[index][0], "end": w[index][1]}] for w in windows]
@@ -33,11 +35,25 @@ def chart_payload(
     }
     if previous_close is not None:
         meta["previousClose"] = previous_close
+    quote = {"close": [c for _, c in candles]}
+    if volumes is not None:
+        quote["volume"] = list(volumes)
     return {
         "meta": meta,
         "timestamp": [t for t, _ in candles],
-        "indicators": {"quote": [{"close": [c for _, c in candles]}]},
+        "indicators": {"quote": [quote]},
     }
+
+
+def day_windows(n):
+    """n consecutive (pre, regular, post) days, oldest first, ending on PRE/REGULAR/POST."""
+    def shift(window, days):
+        return (window[0] - 86400 * days, window[1] - 86400 * days)
+
+    return tuple(
+        (shift(PRE, back), shift(REGULAR, back), shift(POST, back))
+        for back in range(n - 1, -1, -1)
+    )
 
 
 def regular_candles(*closes, start=REGULAR[0]):

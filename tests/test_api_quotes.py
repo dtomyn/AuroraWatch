@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest import mock
 
 import app
-from tests.helpers import chart_payload, regular_candles
+from tests.helpers import chart_payload, day_windows, regular_candles
 
 
 class ApiQuotesTest(unittest.TestCase):
@@ -39,6 +39,19 @@ class ApiQuotesTest(unittest.TestCase):
         self.assertEqual([q["symbol"] for q in data["indexes"]], app.INDEXES)
         called = sorted(c.args[0] for c in self.fetch.call_args_list)
         self.assertEqual(called, sorted(["AAPL"] + app.INDEXES))
+
+    def test_quotes_include_relative_volume(self):
+        first, last = day_windows(2)
+        candles = regular_candles(99.0, 99.5, start=first[1][0]) + regular_candles(100.0, 101.0)
+        self.payload = chart_payload(
+            candles, previous_close=99.5, windows=(first, last), volumes=[1500, 2500, 3000, 3000]
+        )
+        resp = app.app.test_client().get("/api/quotes")
+        self.assertEqual(resp.status_code, 200)
+        [quote] = resp.get_json()["quotes"]
+        self.assertEqual(quote["symbol"], "AAPL")
+        self.assertEqual(quote["avg_volume"], 4000)
+        self.assertEqual(quote["rel_volume"], 1.5)
 
 
 if __name__ == "__main__":

@@ -184,6 +184,8 @@ kbd { font: 500 12px var(--mono); color: var(--muted); border: 1px solid var(--l
 .range-track { position: relative; display: block; width: 100%; min-width: 64px; height: 3px; border-radius: 2px; background: var(--line-strong); }
 .range-marker { position: absolute; top: 50%; width: 7px; height: 7px; border-radius: 50%; background: var(--text); transform: translate(-50%, -50%); }
 .stats .gap { font: 500 12px var(--mono); }
+.stats .relvol { font: 500 12px var(--mono); }
+.stats .relvol.hot { color: var(--pre); font-weight: 600; }
 .stale { color: var(--pre); font-size: 12px; }
 .card.error .err { color: var(--down); margin-top: 12px; font-size: 14px; }
 

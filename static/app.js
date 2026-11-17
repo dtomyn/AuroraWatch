@@ -186,7 +186,7 @@ function updateCard(card, q, isNew) {
     `<span class="range"><span>Day <b>${num(q.day_low)} – ${num(q.day_high)}</b></span>${rangeBar("Day range", q.day_range_pct)}</span>
      <span class="range"><span>52W <b>${num(q.year_low)} – ${num(q.year_high)}</b></span>${rangeBar("52-week range", q.year_range_pct)}</span>
      <span>Open <b>${num(q.open)}</b>${q.gap ? ` <span class="gap ${dir(q.gap.change)}">(${pct(q.gap.pct)})</span>` : ""}</span>
-     <span>Vol <b>${compact(q.volume)}</b></span>${q.stale ? `<span class="stale">Delayed: showing last good quote</span>` : ""}`;
+     <span>Vol <b>${compact(q.volume)}</b>${q.rel_volume != null ? ` <span class="relvol${q.rel_volume >= 1.5 ? " hot" : ""}">(${q.rel_volume.toFixed(1)}× avg)</span>` : ""}</span>${q.stale ? `<span class="stale">Delayed: showing last good quote</span>` : ""}`;
 }
 
 function sorted() {
