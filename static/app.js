@@ -175,6 +175,7 @@ function updateCard(card, q, isNew) {
   card.querySelector("[data-stats]").innerHTML =
     `<span>Day <b>${num(q.day_low)} – ${num(q.day_high)}</b></span>
      <span>52W <b>${num(q.year_low)} – ${num(q.year_high)}</b></span>
+     <span>Open <b>${num(q.open)}</b>${q.gap ? ` <span class="gap ${dir(q.gap.change)}">(${pct(q.gap.pct)})</span>` : ""}</span>
      <span>Vol <b>${compact(q.volume)}</b></span>${q.stale ? `<span class="stale">Delayed: showing last good quote</span>` : ""}`;
 }
 
