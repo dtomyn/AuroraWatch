@@ -138,6 +138,16 @@ def range_pct(price, low, high):
     return round(min(max((price - low) / (high - low) * 100, 0.0), 100.0), 1)
 
 
+def swing_pct(low, high, base):
+    """Intraday swing (high - low) as a percentage of base, rounded to 2 decimals.
+
+    None when an input is missing, base is zero, or the range is inverted.
+    """
+    if low is None or high is None or not base or high < low:
+        return None
+    return round((high - low) / base * 100, 2)
+
+
 def headline_price(session, pre, regular, post):
     """The price the card shows in large type.
 
@@ -282,6 +292,9 @@ def build_quote(symbol, raw):
         "year_low": meta.get("fiftyTwoWeekLow"),
         "day_range_pct": range_pct(
             shown_price, meta.get("regularMarketDayLow"), meta.get("regularMarketDayHigh")
+        ),
+        "day_swing_pct": swing_pct(
+            meta.get("regularMarketDayLow"), meta.get("regularMarketDayHigh"), regular_base
         ),
         "year_range_pct": range_pct(
             shown_price, meta.get("fiftyTwoWeekLow"), meta.get("fiftyTwoWeekHigh")
