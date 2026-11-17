@@ -84,6 +84,8 @@ All responses are JSON except `/`. Errors use the form `{"error": "message"}`.
 | `open` | Close of the first regular-session candle of the last regular day, rounded to 4 decimals, or `null` |
 | `gap` | `{change, pct}` of `open` against `previous_close` (4 and 2 decimals), or `null` |
 | `day_high`, `day_low`, `year_high`, `year_low`, `volume` | Reference stats |
+| `day_range_pct` | Headline price's position between `day_low` and `day_high`, 0–100 to 1 decimal, or `null` (see Range position in section 5) |
+| `year_range_pct` | Headline price's position between `year_low` and `year_high`, 0–100 to 1 decimal, or `null` |
 | `periods` | Yahoo's current trading periods, used by the market clock |
 | `chart` | `{points: [[epoch, price], ...], bands: {pre, regular, post}}`, each band `[start, end]` |
 | `stale` | True when serving the last good quote after a failure |
@@ -119,7 +121,9 @@ Pre and post are `null` unless `hasPrePostMarketData` is true and the type isn't
 
 **Open and gap:** `open` is the close of the first one-minute candle inside the regular window of the last regular day. Pre-market and after-hours candles are never used. It is `null` when no day has regular-session candles. `gap` is `{change, pct}` measured from the regular-session base (the value returned as `previous_close`) to the unrounded open, with `change` rounded to 4 decimals and `pct` to 2. It is `null` when `open` is `null` or the base is missing or zero.
 
-**Headline figure (`activeMove`, client side):** live pre or post when it has a price. When closed, post if its last trade is newer than the regular price. Otherwise regular.
+**Headline figure (`activeMove`, client side):** live pre or post when it has a price. When closed, post if its last trade is newer than the regular price. Otherwise regular. The server mirrors this rule in `headline_price()`, using the same `session` value it sends to the client; the two must stay in sync.
+
+**Range position (`range_pct()`):** `day_range_pct` and `year_range_pct` place the headline price between `regularMarketDayLow`/`regularMarketDayHigh` and `fiftyTwoWeekLow`/`fiftyTwoWeekHigh` respectively, the same sources as the `day_*` and `year_*` stats. The value is `(price - low) / (high - low) * 100`, clamped to 0–100 and then rounded to 1 decimal. It is `null` when the price, low or high is missing, or when high is not greater than low. A stale cached quote keeps the values it was built with.
 
 **Session state:** compared on the server against `currentTradingPeriod`. The clock recalculates each second from SPY's periods, corrected for the server-client time difference.
 
@@ -180,13 +184,13 @@ Open http://127.0.0.1:5000. Paths shown are for Windows.
 
 ## 10. Verification
 
-Checks below were manual, on 2026-10-30, during regular market hours.
-
-An offline standard-library suite in `tests/` covers `build_quote` open and gap figures and `GET /api/quotes` (with `fetch_chart` patched, so no network is used). Run it from the repo root:
+An offline automated suite lives in `tests/` and uses only the standard library's `unittest` and `unittest.mock`. It covers `build_quote` open and gap figures, `range_pct()`, `headline_price()` and the `GET /api/quotes` contract, with `fetch_chart` stubbed, `CONFIG_PATH` pointed at a temporary file and the quote cache cleared, so no request reaches Yahoo. Run it from the repository root:
 
 ```bash
 python -m unittest discover -s tests -t . -v
 ```
+
+The checks below were manual, on 2026-10-30, during regular market hours.
 
 | Area | Method | Result |
 |---|---|---|
